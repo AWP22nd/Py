@@ -1,14 +1,3 @@
-"""
-=====================================================
-        PATTERNS IN PYTHON - WITH CODE
-                @pycode.hubb
-=====================================================
-A collection of 14 classic console patterns.
-Run this file to print all patterns one after another,
-or call any individual function (e.g. pattern_5_diamond()).
-"""
-
-
 # 1. Right Triangle
 def pattern_1_right_triangle():
     for i in range(1, 6):
@@ -128,9 +117,8 @@ def pattern_14_checkerboard():
         print()
 
 
-# ----------------------------------------------------
 # Run every pattern in order
-# ----------------------------------------------------
+
 PATTERNS = [
     ("1. Right Triangle", pattern_1_right_triangle),
     ("2. Inverted Triangle", pattern_2_inverted_triangle),
