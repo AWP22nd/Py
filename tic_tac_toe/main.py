@@ -1,14 +1,10 @@
-#!/usr/bin/env python3
-"""Simple Tic Tac Toe game with Minimax AI.
+#Simple Tic Tac Toe game with Minimax AI.
 
-Features:
-- Player vs Player mode.
-- Player vs AI mode (AI uses Minimax and plays optimally).
-- Console interface.
+# Features:
+# - Player vs Player mode.
+# - Player vs AI mode (AI uses Minimax and plays optimally).
+# - Console interface.
 
-Usage:
-    python3 main.py
-"""
 import sys
 from typing import List, Optional
 
@@ -53,11 +49,11 @@ def available_moves(board: List[str]) -> List[int]:
 
 
 def minimax(board: List[str], depth: int, is_maximizing: bool) -> int:
-    """Minimax algorithm to evaluate the best move.
+    # Minimax algorithm to evaluate the best move.
 
-    Returns:
-        +1 if AI (O) wins, -1 if human (X) wins, 0 for tie.
-    """
+    # Returns:
+        # +1 if AI (O) wins, -1 if human (X) wins, 0 for tie.
+        
     if check_winner(board, "O"):
         return 1
     if check_winner(board, "X"):
