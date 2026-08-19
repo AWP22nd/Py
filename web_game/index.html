@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Block Blast - Web Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <h1>Block Blast</h1>
+        <div class="score-section">
+            <div class="score">Score: <span id="score">0</span></div>
+            <div class="level">Level: <span id="level">1</span></div>
+            <div class="lines">Lines: <span id="lines">0</span></div>
+        </div>
+        <div class="game-board" id="game-board"></div>
+        <div class="next-piece" id="next-piece"></div>
+        <div class="controls">
+            <button onclick="movePiece(0, 1)">← Kanan</button>
+            <button onclick="movePiece(1, 0)">↓ Bawah</button>
+            <button onclick="rotatePiece()">🔄 Putar</button>
+            <button onclick="dropPiece()">🚀 Drop Cepat</button>
+            <button onclick="resetGame()">🔄 Mulai Baru</button>
+        </div>
+        <div class="game-over" id="game-over">
+            <h2>Game Over!</h2>
+            <p>Score Akhir: <span id="final-score">0</span></p>
+            <button onclick="resetGame()">Main Lagi</button>
+        </div>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>
