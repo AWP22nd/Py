@@ -1,20 +1,15 @@
-"""
-Game Ular Tangga (Snake and Ladder) - Versi GUI
-=================================================
-Menggunakan Tkinter (bawaan Python, tidak perlu install apa-apa).
 
-Cara main:
-    python ular_tangga_gui.py
+# Cara main:
+#     python ular_tangga_gui.py
 
-Fitur:
-- Papan digambar visual 10x10 (kotak 1-100) di canvas
-- Ular & tangga digambar sebagai garis merah/hijau
-- Token pemain berupa lingkaran berwarna, bergerak saat giliran
-- Mode SOLO: kamu vs 1-3 bot (komputer jalan otomatis)
-- Mode MULTIPLAYER: 2-4 pemain manusia bergantian
-- Tombol "Lempar Dadu" + tampilan angka dadu
-- Log permainan di panel samping
-"""
+# Fitur:
+# - Papan digambar visual 10x10 (kotak 1-100) di canvas.
+# - Ular & tangga digambar sebagai garis merah/hijau.
+# - Token pemain berupa lingkaran berwarna, bergerak saat giliran.
+# - Mode SOLO: kamu vs 1-3 bot (komputer jalan otomatis).
+# - Mode MULTIPLAYER: 2-4 pemain manusia bergantian.
+# - Tombol "Lempar Dadu" + tampilan angka dadu.
+# - Log permainan di panel samping.
 
 import tkinter as tk
 from tkinter import simpledialog, messagebox
@@ -35,9 +30,13 @@ PLAYER_COLORS = ["#e74c3c", "#3498db", "#2ecc71", "#f1c40f"]
 def cell_to_xy(num):
     """Konversi nomor kotak (1-100) ke koordinat tengah piksel di canvas."""
     idx = num - 1
-    row = idx // GRID          # 0 = baris paling bawah
+    
+     # 0 = baris paling bawah
+    row = idx // GRID
     col = idx % GRID
-    if row % 2 == 1:           # baris ganjil arah kanan-ke-kiri (pola zig-zag ular tangga asli)
+
+    # baris ganjil arah kanan-ke-kiri (pola zig-zag ular tangga asli)
+    if row % 2 == 1:
         col = GRID - 1 - col
     x = PADDING + col * CELL + CELL / 2
     y = PADDING + (GRID - 1 - row) * CELL + CELL / 2
@@ -56,7 +55,7 @@ class Player:
 class SnakeLadderGUI:
     def __init__(self, root):
         self.root = root
-        self.root.title("🐍 Ular Tangga 🪜")
+        self.root.title(" Ular Tangga ")
         self.root.resizable(False, False)
 
         self.players = []
@@ -72,7 +71,7 @@ class SnakeLadderGUI:
         self.start_frame = tk.Frame(self.root, padx=30, pady=30)
         self.start_frame.pack()
 
-        tk.Label(self.start_frame, text="🐍 ULAR TANGGA 🪜", font=("Helvetica", 22, "bold")).pack(pady=10)
+        tk.Label(self.start_frame, text=" ULAR TANGGA ", font=("Helvetica", 22, "bold")).pack(pady=10)
 
         tk.Label(self.start_frame, text="Nama kamu:", font=("Helvetica", 12)).pack(pady=(10, 0))
         self.name_entry = tk.Entry(self.start_frame, font=("Helvetica", 12), justify="center")
@@ -244,12 +243,12 @@ class SnakeLadderGUI:
 
         if new_pos in SNAKES:
             tail = SNAKES[new_pos]
-            self.log(f"   🐍 Kena ular! Turun ke {tail}")
+            self.log(f" Kena ular! Turun ke {tail}")
             player.position = tail
             self.root.after(300, lambda: self.move_token(player))
         elif new_pos in LADDERS:
             top = LADDERS[new_pos]
-            self.log(f"   🪜 Kena tangga! Naik ke {top}")
+            self.log(f" Kena tangga! Naik ke {top}")
             player.position = top
             self.root.after(300, lambda: self.move_token(player))
 
@@ -282,10 +281,10 @@ class SnakeLadderGUI:
 
     def announce_winner(self, player):
         self.update_status_positions()
-        self.log(f"🎉 {player.name} MENANG!")
+        self.log(f" {player.name} MENANG!")
         self.status_label.config(text=f"🏆 {player.name} MENANG!")
         self.roll_btn.config(state="disabled")
-        messagebox.showinfo("Selesai!", f"🎉 {player.name} mencapai kotak 100 dan MENANG! 🎉")
+        messagebox.showinfo("Selesai!", f" {player.name} mencapai kotak 100 dan MENANG! ")
 
 
 def main():
