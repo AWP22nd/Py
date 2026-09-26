@@ -37,14 +37,14 @@ class Task:
 
 
 def ensure_tasks_file():
-    """Pastikan file tasks ada dan valid JSON"""
+    # Pastikan file tasks ada dan valid JSON
     if not TASKS_FILE.exists():
         TASKS_FILE.parent.mkdir(parents=True, exist_ok=True)
         TASKS_FILE.write_text("[]")
 
 
 def load_tasks() -> List[Dict]:
-    """Muat semua tugas dari file"""
+    # Muat semua tugas dari file
     ensure_tasks_file()
     try:
         with open(TASKS_FILE, 'r') as f:
@@ -54,19 +54,19 @@ def load_tasks() -> List[Dict]:
 
 
 def save_tasks(tasks: List[Dict]):
-    """Simpan tugas ke file"""
+    # Simpan tugas ke file
     ensure_tasks_file()
     with open(TASKS_FILE, 'w') as f:
         json.dump(tasks, f, indent=2, default=str)
 
 
 def generate_id() -> str:
-    """Generate ID unik untuk tugas"""
+    # Generate ID unik untuk tugas
     return datetime.now().strftime("%Y%m%d%H%M%S%f")[:-3]
 
 
 def parse_date(date_str: str) -> Optional[datetime]:
-    """Parse string tanggal ke datetime"""
+    # Parse string tanggal ke datetime
     if not date_str:
         return None
     formats = ["%Y-%m-%d %H:%M", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d"]
@@ -79,13 +79,13 @@ def parse_date(date_str: str) -> Optional[datetime]:
 
 
 def load_task_objects() -> List[Task]:
-    """Muat tugas sebagai objek Task"""
+    # Muat tugas sebagai objek Task
     data = load_tasks()
     return [Task(**item) for item in data]
 
 
 def save_task_objects(tasks: List[Task]):
-    """Simpan objek Task ke file"""
+    # Simpan objek Task ke file
     data = [asdict(t) for t in tasks]
     save_tasks(data)
 
@@ -113,7 +113,7 @@ class TaskManagerGUI:
         self.refresh_tasks()
 
     def setup_styles(self):
-        """Setup style untuk tkinter widgets"""
+        # Setup style untuk tkinter widgets
         style = ttk.Style()
         style.theme_use('clam')
 
@@ -131,7 +131,7 @@ class TaskManagerGUI:
         style.configure('Status.TLabel', font=('Segoe UI', 9))
 
     def setup_header(self):
-        """Setup header"""
+        # Setup header
         header = tk.Frame(self.root, bg="#1e3a8a", height=60)
         header.pack(fill='x')
         header.pack_propagate(False)
@@ -141,18 +141,18 @@ class TaskManagerGUI:
                  bg="#1e3a8a", fg="white").pack(pady=15)
 
     def setup_toolbar(self):
-        """Setup toolbar dengan tombol aksi"""
+        # Setup toolbar dengan tombol aksi
         toolbar = tk.Frame(self.root, bg="#f0f2f5", height=50)
         toolbar.pack(fill='x', padx=10, pady=5)
 
         btns = [
-            ("➕ Tambah", self.add_task_window, "#28a745"),
-            ("✏️ Edit", self.edit_task_window, "#007bff"),
-            ("✅ Selesai", self.complete_task, "#17a2b8"),
-            ("🗑️ Hapus", self.delete_task, "#dc3545"),
-            ("📊 Statistik", self.show_stats, "#6f42c1"),
-            ("⏰ Reminder", self.check_reminders, "#ffc107"),
-            ("🔄 Refresh", self.refresh_tasks, "#6c757d"),
+            ("Tambah", self.add_task_window, "#28a745"),
+            ("Edit", self.edit_task_window, "#007bff"),
+            ("Selesai", self.complete_task, "#17a2b8"),
+            ("Hapus", self.delete_task, "#dc3545"),
+            ("Statistik", self.show_stats, "#6f42c1"),
+            ("Reminder", self.check_reminders, "#ffc107"),
+            ("Refresh", self.refresh_tasks, "#6c757d"),
         ]
 
         for text, cmd, color in btns:
@@ -163,7 +163,7 @@ class TaskManagerGUI:
             btn.pack(side='left', padx=4, pady=8)
 
     def setup_treeview(self):
-        """Setup treeview untuk daftar tugas"""
+        # Setup treeview untuk daftar tugas
         # Frame untuk treeview
         tree_frame = tk.Frame(self.root, bg="white")
         tree_frame.pack(fill='both', expand=True, padx=10, pady=5)
@@ -228,7 +228,7 @@ class TaskManagerGUI:
         self.tree.bind("<Double-1>", self.on_double_click)
 
     def setup_detail_panel(self):
-        """Setup panel detail tugas"""
+        # Setup panel detail tugas
         self.detail_frame = tk.LabelFrame(self.root, text="🔍 Detail Tugas",
                                           bg="white", font=("Segoe UI", 10, "bold"))
         self.detail_frame.pack(fill='x', padx=10, pady=(0, 10))
@@ -250,7 +250,7 @@ class TaskManagerGUI:
                                                    sticky='w', padx=15, pady=3)
 
     def setup_status_bar(self):
-        """Setup status bar"""
+        # Setup status bar
         self.status_var = tk.StringVar(value="Total tugas: 0")
         status_bar = tk.Label(self.root, textvariable=self.status_var,
                               bg="#e9ecef", font=("Segoe UI", 9),
@@ -258,7 +258,7 @@ class TaskManagerGUI:
         status_bar.pack(fill='x', side='bottom')
 
     def refresh_tasks(self, search_query: str = "", filter_status: str = "all"):
-        """Refresh daftar tugas"""
+        # Refresh daftar tugas
         self.tasks = load_task_objects()
 
         # Filter by status
@@ -312,13 +312,13 @@ class TaskManagerGUI:
         self.status_var.set(f"Total: {total} | Pending: {pending} | Selesai: {completed}")
 
     def on_search(self, *args):
-        """Handle search"""
+        # Handle search
         query = self.search_var.get()
         filter_status = self.filter_var.get()
         self.refresh_tasks(query, filter_status)
 
     def on_tree_select(self, event):
-        """Handle tree selection"""
+        # Handle tree selection
         selected = self.tree.selection()
         if selected:
             index = self.tree.index(selected[0])
@@ -327,7 +327,7 @@ class TaskManagerGUI:
                 self.show_task_detail()
 
     def on_double_click(self, event):
-        """Handle double click to edit"""
+        # Handle double click to edit
         selected = self.tree.selection()
         if selected:
             index = self.tree.index(selected[0])
@@ -336,7 +336,7 @@ class TaskManagerGUI:
                 self.edit_task_window()
 
     def show_task_detail(self):
-        """Show detail of selected task"""
+        # Show detail of selected task
         if not self.selected_task:
             return
 
@@ -351,7 +351,7 @@ class TaskManagerGUI:
         self.detail_vars['created_at'].set(f"Dibuat: {created}")
 
     def add_task_window(self):
-        """Buka window tambah tugas"""
+        # Buka window tambah tugas
         self.selected_task = None
 
         dialog = tk.Toplevel(self.root)
@@ -421,10 +421,10 @@ class TaskManagerGUI:
             save_task_objects(self.tasks)
             self.refresh_tasks(self.search_var.get(), self.filter_var.get())
             dialog.destroy()
-            messagebox.showinfo("Sukses", f"✅ Tugas '{title}' ditambahkan!", parent=self.root)
+            messagebox.showinfo("Sukses", f"Tugas '{title}' ditambahkan!", parent=self.root)
 
     def edit_task_window(self):
-        """Buka window edit tugas"""
+        # Buka window edit tugas
         if not self.selected_task:
             messagebox.showwarning("Peringatan", "Pilih tugas yang ingin diedit!", parent=self.root)
             return
@@ -432,7 +432,7 @@ class TaskManagerGUI:
         task = self.selected_task
 
         dialog = tk.Toplevel(self.root)
-        dialog.title("✏️ Edit Tugas")
+        dialog.title("Edit Tugas")
         dialog.geometry("400x380")
         dialog.grab_set()
 
@@ -484,10 +484,10 @@ class TaskManagerGUI:
             save_task_objects(self.tasks)
             self.refresh_tasks(self.search_var.get(), self.filter_var.get())
             dialog.destroy()
-            messagebox.showinfo("Sukses", f"✅ Tugas '{task.title}' telah diedit!", parent=self.root)
+            messagebox.showinfo("Sukses", f"Tugas '{task.title}' telah diedit!", parent=self.root)
 
     def complete_task(self):
-        """Tandai tugas selesai"""
+        # Tandai tugas selesai
         selected = self.tree.selection()
         if not selected:
             messagebox.showwarning("Peringatan", "Pilih tugas yang ingin ditandai selesai!", parent=self.root)
@@ -508,7 +508,7 @@ class TaskManagerGUI:
                 messagebox.showinfo("Sukses", f"✅ Tugas '{task.title}' selesai!", parent=self.root)
 
     def delete_task(self):
-        """Hapus tugas"""
+        # Hapus tugas
         selected = self.tree.selection()
         if not selected:
             messagebox.showwarning("Peringatan", "Pilih tugas yang ingin dihapus!", parent=self.root)
@@ -524,7 +524,7 @@ class TaskManagerGUI:
                 messagebox.showinfo("Sukses", f"🗑️ Tugas '{task.title}' dihapus!", parent=self.root)
 
     def show_stats(self):
-        """Tampilkan statistik tugas"""
+        # Tampilkan statistik tugas
         if not self.tasks:
             messagebox.showinfo("Statistik", "Tidak ada tugas yang terdaftar!", parent=self.root)
             return
@@ -543,8 +543,8 @@ class TaskManagerGUI:
         stats_text = f"""📊 STATISTIK TUGAS
 
 Total Tugas: {total}
-✅ Selesai: {completed} ({completed*100//total if total else 0}%)
-⏳ Pending: {pending}
+Selesai: {completed} ({completed*100//total if total else 0}%)
+Pending: {pending}
 
 By Prioritas:
   🔴 Tinggi: {by_priority.get('high', 0)}
@@ -573,15 +573,15 @@ By Kategori:
                     time_diff = due - now
 
                     if now > due:
-                        reminders.append(("🚨 OVERDUE", task))
+                        reminders.append(("OVERDUE", task))
                     elif time_diff <= timedelta(hours=24):
-                        reminders.append(("⏰ Mendekati", task))
+                        reminders.append(("Mendekati", task))
 
         if not reminders:
-            messagebox.showinfo("Reminder", "✅ Tidak ada tugas yang perlu diingatkan!", parent=self.root)
+            messagebox.showinfo("Reminder", "Tidak ada tugas yang perlu diingatkan!", parent=self.root)
             return
 
-        reminder_text = "⏰ REMINDER TUGAS\n\n"
+        reminder_text = "REMINDER TUGAS\n\n"
         for r_type, task in reminders:
             due_str = ""
             if task.due_date:
