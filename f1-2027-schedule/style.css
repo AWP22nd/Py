@@ -1,0 +1,126 @@
+/* F1 2027 Race Schedule - Modern Simple CSS */
+:root {
+  --primary: #222;
+  --secondary: #f5f5f5;
+  --accent: #dc143c;
+  --text: #333;
+  --muted: #666;
+  --bg: #fafafa;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 3rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #eee;
+}
+
+h1 {
+  font-size: 2.5rem;
+  color: var(--primary);
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+}
+
+.subtitle {
+  color: var(--muted);
+  font-size: 1rem;
+  margin-top: 0.25rem;
+}
+
+main {
+  margin-top: 2rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+th {
+  background: var(--primary);
+  color: white;
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #eee;
+  transition: background 0.2s;
+}
+
+tr:hover td {
+  background: var(--secondary);
+}
+
+.round {
+  min-width: 50px;
+  text-align: center;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.race-name {
+  min-width: 200px;
+  font-weight: 500;
+}
+
+.date {
+  min-width: 110px;
+  text-align: center;
+}
+
+.location {
+  min-width: 230px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.notes {
+  text-align: center;
+  margin-top: 2rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+footer {
+  margin-top: 3rem;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.85rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  th, td { padding: 8px 10px; font-size: 0.75rem; }
+  h1 { font-size: 1.8rem; }
+  .round { min-width: 40px; }
+  .race-name { min-width: 150px; }
+  .date { min-width: 90px; }
+  .location { min-width: 180px; }
+}
