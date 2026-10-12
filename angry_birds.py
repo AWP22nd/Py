@@ -4,7 +4,7 @@ import pygame
 import random
 import math
 from dataclasses import dataclass
-from typing import List
+from typing import List, Optional
 
 # Initialize pygame
 pygame.init()
@@ -27,6 +27,7 @@ YELLOW = (255, 255, 0)
 GRAY = (100, 100, 100)
 PINK = (255, 180, 180)
 GREEN_GRADIENT = [(34, 139, 34), (124, 252, 124)]
+ORANGE = (255, 165, 0)
 
 FONT = pygame.font.SysFont("Arial", 18)
 BIG_FONT = pygame.font.SysFont("Arial", 32)
@@ -34,7 +35,6 @@ SMALL_FONT = pygame.font.SysFont("Arial", 14)
 
 
 def draw_grass(surface):
-    """Draw grass area at the bottom."""
     # Ground line
     pygame.draw.line(surface, GREEN, (0, HEIGHT - 50), (WIDTH, HEIGHT - 50), 5)
     # Grass blades
@@ -73,10 +73,14 @@ class Bird:
         self.x += self.velocity[0]
         self.y += self.velocity[1]
 
+    def is_off_screen(self, margin=100) -> bool:
+        return (self.y > HEIGHT + margin or
+                self.x < -margin or
+                self.x > WIDTH + margin)
+
     def draw(self, surface):
         color = self.color if not self.caught else GRAY
         pygame.draw.circle(surface, color, (int(self.x), int(self.y)), self.radius)
-        # Draw eye when launched
         if self.launched and not self.caught:
             eye_offset = 8
             eye_x = self.x + (self.velocity[0] * 0.1) if self.velocity[0] != 0 else self.x + eye_offset
@@ -90,8 +94,12 @@ class Brick:
     y: float
     width: int
     height: int
-    health: int = 1  # 1=normal, 2=strong, 3=indestructible
+    health: int = 1
     color: tuple = RED
+    original_health: int = 1
+
+    def __post_init__(self):
+        self.original_health = self.health
 
 
 class Structure:
@@ -103,20 +111,31 @@ class Structure:
             pygame.draw.rect(surface, brick.color, (brick.x, brick.y, brick.width, brick.height))
             pygame.draw.rect(surface, BLACK, (brick.x, brick.y, brick.width, brick.height), 2)
 
-    def hit(self, pos):
-        """Check if position hits a brick, reduce health or remove."""
+    def hit(self, pos) -> tuple[bool, int]:
         for brick in self.bricks:
             if brick.x < pos[0] < brick.x + brick.width and brick.y < pos[1] < brick.y + brick.height:
+                original_health = brick.original_health
                 brick.health -= 1
-                # Change color based on health
                 if brick.health >= 2:
                     brick.color = BROWN
                 elif brick.health == 1:
                     brick.color = RED
                 elif brick.health <= 0:
                     self.bricks.remove(brick)
-                return True
-        return False
+                points = 10 * original_health
+                return True, points
+        return False, 0
+
+
+def create_level1_structure():
+    bricks = []
+    for i in range(8):
+        bricks.append(Brick(x=350 + i * 60, y=HEIGHT - 150, width=50, height=30, health=2, color=BROWN))
+    for i in range(5):
+        bricks.append(Brick(x=380 + i * 60, y=HEIGHT - 220, width=50, height=30, health=1, color=RED))
+    for i in range(3):
+        bricks.append(Brick(x=400 + i * 60, y=HEIGHT - 290, width=50, height=30, health=1, color=RED))
+    return bricks
 
 
 def main():
@@ -127,7 +146,6 @@ def main():
     score = 0
     max_birds = 3
 
-    # Create birds - different types with different abilities
     birds = [
         Bird(x=150, y=HEIGHT - 100, radius=20, color=RED, type_name="red"),
         Bird(x=150, y=HEIGHT - 130, radius=20, color=BLUE, type_name="blue"),
@@ -137,33 +155,13 @@ def main():
     current_bird_index = 0
     current_bird = birds[current_bird_index]
 
-    # Level 1 structure
-    def create_level1_structure():
-        bricks = []
-        # Bottom row - strong bricks
-        for i in range(8):
-            bricks.append(Brick(x=350 + i * 60, y=HEIGHT - 150, width=50, height=30, health=2, color=BROWN))
-        # Middle row (offset) - normal bricks
-        for i in range(5):
-            bricks.append(Brick(x=380 + i * 60, y=HEIGHT - 220, width=50, height=30, health=1, color=RED))
-        # Top row - breakable
-        for i in range(3):
-            bricks.append(Brick(x=400 + i * 60, y=HEIGHT - 290, width=50, height=30, health=1, color=RED))
-        return bricks
-
     structure = Structure(create_level1_structure())
 
-    # Physics state
-    launching = False
     start_pos = (0, 0)
     angle = 0
     power = 0
     max_power = 10
     pulling = False
-
-    # UI state
-    show_trajectory = True
-    trajectory_points = []
 
     while running:
         clock.tick(60)
@@ -171,174 +169,143 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_q:
-                    running = False
-                if event.key == pygame.K_r:
-                    # Reset to level 1
-                    level = 1
-                    score = 0
-                    max_birds = 3
-                    birds = [
-                        Bird(x=150, y=HEIGHT - 100, radius=20, color=RED, type_name="red"),
-                        Bird(x=150, y=HEIGHT - 130, radius=20, color=BLUE, type_name="blue"),
-                        Bird(x=150, y=HEIGHT - 160, radius=20, color=YELLOW, type_name="yellow"),
-                    ]
-                    current_bird_index = 0
-                    current_bird = birds[current_bird_index]
-                    structure = Structure(create_level1_structure())
-                    launching = False
-                    angle = 0
-                    power = 0
-                    level_complete = False
-
-                if event.key == pygame.K_c and current_bird and current_bird.launched:
-                    # Blue bird split ability (split into 3)
-                    if current_bird.type_name == "blue" and not current_bird.caught:
-                        current_bird.caught = True
-                        # Create 3 smaller birds split from current position
-                        for i in range(3):
-                            angle_offset = i * 30 - 30  # -30, 0, +30 degrees
-                            vel_power = 5
-                            rad = math.radians(angle_offset)
-                            vx = vel_power * math.cos(rad)
-                            vy = -vel_power * math.sin(rad)
-                            new_bird = Bird(
-                                x=current_bird.x,
-                                y=current_bird.y,
-                                radius=12,
-                                color=BLUE,
-                                velocity=[vx, vy],
-                                launched=True,
-                                type_name="blue_split"
-                            )
-                            birds.append(new_bird)
-
-                if event.key == pygame.K_f and current_bird and current_bird.launched:
-                    # Yellow bird speed boost
-                    if current_bird.type_name == "yellow" and not current_bird.caught:
-                        current_bird.caught = True
-                        current_bird.velocity[0] *= 3
-                        current_bird.velocity[1] *= 3
-
+            if event.key == pygame.K_q:
+                running = False
+            if event.key == pygame.K_r:
+                level = 1
+                score = 0
+                birds = [
+                    Bird(x=150, y=HEIGHT - 100, radius=20, color=RED, type_name="red"),
+                    Bird(x=150, y=HEIGHT - 130, radius=20, color=BLUE, type_name="blue"),
+                    Bird(x=150, y=HEIGHT - 160, radius=20, color=YELLOW, type_name="yellow"),
+                ]
+                current_bird_index = 0
+                current_bird = birds[current_bird_index]
+                structure = Structure(create_level1_structure())
+                angle = 0
+                power = 0
+                level_complete = False
+                game_over = False
+                pulling = False
+            if event.key == pygame.K_c and current_bird and current_bird.launched:
+                if current_bird.type_name == "blue" and not current_bird.caught:
+                    current_bird.caught = True
+                    for i in range(3):
+                        angle_offset = i * 30 - 30
+                        vel_power = 5
+                        rad = math.radians(angle_offset)
+                        vx = vel_power * math.cos(rad)
+                        vy = -vel_power * math.sin(rad)
+                        new_bird = Bird(
+                            x=current_bird.x,
+                            y=current_bird.y,
+                            radius=12,
+                            color=BLUE,
+                            velocity=[vx, vy],
+                            launched=True,
+                            type_name="blue_split"
+                        )
+                        birds.append(new_bird)
+            if event.key == pygame.K_f and current_bird and current_bird.launched:
+                if current_bird.type_name == "yellow" and not current_bird.caught:
+                    current_bird.caught = True
+                    current_bird.velocity[0] *= 3
+                    current_bird.velocity[1] *= 3
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if not current_bird.launched and not game_over and not level_complete:
+                if current_bird and not current_bird.launched and not game_over and not level_complete:
                     pulling = True
                     start_pos = pygame.mouse.get_pos()
-
             if event.type == pygame.MOUSEBUTTONUP:
-                if pulling and not current_bird.launched:
+                if pulling and current_bird and not current_bird.launched:
                     end_pos = pygame.mouse.get_pos()
-                    # Calculate angle from horizontal
                     dx = end_pos[0] - start_pos[0]
-                    dy = start_pos[1] - end_pos[1]  # Inverted Y
+                    dy = start_pos[1] - end_pos[1]
                     angle = math.degrees(math.atan2(dy, dx))
                     power = min(math.hypot(dx, dy) / 20, max_power)
                     current_bird.launch(angle, power)
                     pulling = False
-                    # Switch to next bird or handle game state
                     current_bird_index += 1
                     if current_bird_index < len(birds):
                         current_bird = birds[current_bird_index]
                     else:
-                        current_bird = None  # All birds used
+                        current_bird = None
 
-        if not current_bird.launched or (current_bird and current_bird.caught):
-            # Handle dragging for launch
+        if current_bird and not current_bird.launched and not game_over and not level_complete:
             if pulling and pygame.mouse.get_pressed()[0]:
                 mouse_pos = pygame.mouse.get_pos()
                 dx = mouse_pos[0] - start_pos[0]
-                dy = start_pos[1] - mouse_pos[1]  # Inverted Y
+                dy = start_pos[1] - mouse_pos[1]
                 angle = math.degrees(math.atan2(dy, dx))
                 power = min(math.hypot(dx, dy) / 20, max_power)
             else:
                 angle = 0
                 power = 0
 
-        # Update all active birds
-        birds_to_remove = []
         for bird in birds:
             if bird.launched and not bird.caught:
                 bird.update()
-
-                # Check collision with structure
-                if structure.hit((bird.x, bird.y)):
+                hit, points = structure.hit((bird.x, bird.y))
+                if hit:
                     bird.caught = True
-                    # Award points based on bird type and structure health
-                    points = 10 * (5 - bird.health) if hasattr(bird, 'health') else 10
                     score += points
 
-        # Remove caught birds that are done
-        birds = [b for b in birds if not (b.caught and b.launched and b not in birds_to_remove)]
+        birds = [b for b in birds if not (b.caught and b.launched and b.is_off_screen())]
 
-        # Check if all bricks destroyed
         if len(structure.bricks) == 0:
             level_complete = True
-            score += 100 * level  # Bonus for completing level
+            score += 100 * level
 
-        # Game over if no birds left and level not complete
-        active_birds = [b for b in birds if b.launched]
-        if not active_birds and not level_complete and current_bird_index >= len(birds):
+        birds_not_yet_launched = [b for b in birds if not b.launched]
+        active_birds = [b for b in birds if b.launched and not b.caught]
+        if len(birds_not_yet_launched) == 0 and len(active_birds) == 0 and not level_complete and not game_over:
             game_over = True
 
-        # Drawing
-        screen.fill((135, 206, 235))  # Sky blue
+        screen.fill((135, 206, 235))
 
         draw_grass(screen)
         structure.draw(screen)
 
-        # Draw birds
         for bird in birds:
             bird.draw(screen)
 
-        # Draw trajectory line when dragging or previewing
-        if not current_bird.launched and not game_over and not level_complete:
+        if current_bird and not current_bird.launched and not game_over and not level_complete:
             mouse_pos = pygame.mouse.get_pos()
-            # Calculate trajectory
             dx = mouse_pos[0] - current_bird.x
             dy = current_bird.y - mouse_pos[1]
             angle = math.degrees(math.atan2(dy, dx))
             power = min(math.hypot(dx, dy) / 20, max_power)
 
-            # Draw trajectory preview
-            if show_trajectory:
-                temp_vel = [power * math.cos(math.radians(angle)),
-                            -power * math.sin(math.radians(angle))]
-                traj_points = [current_bird]
-                bx, by = current_bird.x, current_bird.y
-                gravity = 0.5
-                for _ in range(20):
-                    bx += temp_vel[0] * 3
-                    by += temp_vel[1] * 3 + 0.5 * gravity * _ * _
-                    if 0 <= bx <= WIDTH and 0 <= by <= HEIGHT:
-                        traj_points.append((bx, by))
-                    else:
-                        break
+            temp_vel = [power * math.cos(math.radians(angle)),
+                        -power * math.sin(math.radians(angle))]
+            traj_points = [(current_bird.x, current_bird.y)]
+            bx, by = current_bird.x, current_bird.y
+            gravity = 0.5
+            for i in range(20):
+                bx += temp_vel[0] * 3
+                by += temp_vel[1] * 3 + 0.5 * gravity * (i + 1)
+                if 0 <= bx <= WIDTH and 0 <= by <= HEIGHT:
+                    traj_points.append((bx, by))
+                else:
+                    break
 
-                # Draw trajectory as thin lines
-                for i in range(len(traj_points) - 1):
-                    alpha = int(200 * (i / len(traj_points)))
-                    color = (255, 165, 0, alpha) if alpha > 0 else (255, 165, 0)
-                    # pygame doesn't support alpha well for lines, so use width variation
-                    width = int(3 * (i / len(traj_points)))
-                    pygame.draw.line(surface, (255, 180, 0),
-                                     (int(traj_points[i][0]), int(traj_points[i][1])),
-                                     (int(traj_points[i+1][0]), int(traj_points[i+1][1])), width)
+            for i in range(len(traj_points) - 1):
+                width = max(1, int(3 * (1 - i / len(traj_points))))
+                pygame.draw.line(screen, ORANGE,
+                                 (int(traj_points[i][0]), int(traj_points[i][1])),
+                                 (int(traj_points[i+1][0]), int(traj_points[i+1][1])), width)
 
             draw_power_bar(screen, angle, power, max_power)
             instruct_text = FONT.render("Drag the bird to launch", True, WHITE)
             screen.blit(instruct_text, (WIDTH // 2 - 100, HEIGHT - 40))
 
-        # UI: Score and Level
         score_text = FONT.render(f"Score: {score}", True, BLACK)
         level_text = FONT.render(f"Level: {level}", True, BLACK)
-        birds_left = FONT.render(f"Birds: {current_bird_index + 1}/{len(birds)}", True, BLACK)
+        birds_launched_count = current_bird_index + 1
+        birds_left = FONT.render(f"Birds: {birds_launched_count}/{len(birds)}", True, BLACK)
         screen.blit(score_text, (20, 20))
         screen.blit(level_text, (20, 50))
         screen.blit(birds_left, (20, 80))
 
-        # Game over / Level complete
         if game_over:
             overlay = pygame.Surface((WIDTH, HEIGHT))
             overlay.fill(BLACK)
@@ -369,17 +336,11 @@ def main():
 
 
 def draw_power_bar(surface, angle, power, max_power=10):
-    """Draw angle and power indicators."""
-    # Angle display
     angle_text = FONT.render(f"Angle: {int(angle)}°", True, WHITE)
     surface.blit(angle_text, (20, 20))
-
-    # Power bar background
     pygame.draw.rect(surface, GRAY, (20, 50, 200, 20))
-    # Power bar fill
     bar_width = int((power / max_power) * 200)
     pygame.draw.rect(surface, YELLOW, (20, 50, bar_width, 20))
-    # Power text
     power_text = FONT.render(f"Power: {int(power)}/{max_power}", True, BLACK)
     surface.blit(power_text, (20, 70))
 
